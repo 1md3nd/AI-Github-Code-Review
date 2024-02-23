@@ -1,99 +1,10 @@
 import fnmatch
-import ast
-import astor
-import markdown
-import nbformat
+import collections
 
 def fix_url(url):
     # Remove leading and trailing spaces and slashes
     url = url.strip().strip('/')
     return url
-
-def clean_and_format_python_code(data):
-    # Decode the data if it's in bytes format
-    if isinstance(data, bytes):
-        data = data.decode('utf-8')
-    # Parse the Python code
-    parsed_ast = ast.parse(data)
-    # Pretty-print the AST to a string
-    formatted_code = astor.to_source(parsed_ast)
-
-    return formatted_code
-
-def clean_and_format_markdown(data):
-    # Decode the data if it's in bytes format
-    if isinstance(data, bytes):
-        data = data.decode('utf-8')
-
-    # Parse Markdown and convert it to HTML
-    html = markdown.markdown(data)
-
-    return html
-
-def clean_and_format_text(data):
-    # Decode the data if it's in bytes format
-    if isinstance(data, bytes):
-        data = data.decode('utf-8')
-
-    # Remove leading and trailing whitespace
-    cleaned_data = data.strip()
-
-    return cleaned_data
-
-def clean_and_format_ipynb(data):
-    # Decode the data if it's in bytes format
-    if isinstance(data, bytes):
-        data = data.decode('utf-8')
-
-    # Load the notebook from the data
-    notebook = nbformat.reads(data, as_version=4)
-
-    # Process the notebook cells
-    for cell in notebook.cells:
-        # Clean and format each cell
-        if cell.cell_type == 'code':
-            # Example: Remove leading and trailing whitespace from code cells
-            cell.source = cell.source.strip()
-        elif cell.cell_type == 'markdown':
-            # Example: Remove leading and trailing whitespace from Markdown cells
-            cell.source = cell.source.strip()
-
-    # Serialize the notebook back to JSON format
-    formatted_notebook = nbformat.writes(notebook)
-
-    return formatted_notebook
-
-def clean_dockerfile(data):
-    # Decode the data if it's in bytes format
-    if isinstance(data, bytes):
-        data = data.decode('utf-8')
-
-    # Split the Dockerfile into lines
-    lines = data.split('\n')
-
-    # Remove comments and leading/trailing whitespace from each line
-    cleaned_lines = [line.split('#')[0].strip() for line in lines]
-
-    # Remove empty lines
-    cleaned_data = '\n'.join(line for line in cleaned_lines if line)
-
-    return cleaned_data
-
-def clean_shell_script(data):
-    # Decode the data if it's in bytes format
-    if isinstance(data, bytes):
-        data = data.decode('utf-8')
-
-    # Split the script into lines
-    lines = data.split('\n')
-
-    # Remove comments and leading/trailing whitespace from each line
-    cleaned_lines = [line.split('#')[0].strip() for line in lines]
-
-    # Remove empty lines
-    cleaned_data = '\n'.join(line for line in cleaned_lines if line)
-
-    return cleaned_data
 
 FOLDERS_TO_EXCLUDE = ['migrations','__pycache__/', 'build/', 'develop-eggs/', 'dist/', 'downloads/',
     'eggs/', '.eggs/', 'lib/', 'lib64/', 'parts/', 'sdist/', 'var/',
@@ -122,3 +33,92 @@ def is_ignored_files(name,patterns=FILES_TO_EXCLUDE):
 
 def is_ignored_folder(name,patterns=FOLDERS_TO_EXCLUDE):
     return is_ignored(name,patterns)
+
+file_extension_to_language = {
+    '.c': 'C',
+    '.h': 'C',
+    '.cpp': 'C++',
+    '.hpp': 'C++',
+    '.java': 'Java',
+    '.py': 'Python',
+    '.rb': 'Ruby',
+    '.js': 'JavaScript',
+    '.html': 'HTML',
+    '.css': 'CSS',
+    '.php': 'PHP',
+    '.swift': 'Swift',
+    '.cs': 'C#',
+    '.pl': 'Perl',
+    '.r': 'R',
+    '.sql': 'SQL',
+    '.go': 'Go',
+    '.lua': 'Lua',
+    '.rs': 'Rust',
+    '.sh': 'Shell',
+    '.asm': 'Assembly',
+    '.json': 'JSON',
+    '.xml': 'XML',
+    '.yaml': 'YAML',
+    '.toml': 'TOML',
+    '.jsx': 'React JSX',
+    '.tsx': 'React TSX',
+    '.coffee': 'CoffeeScript',
+    '.ts': 'TypeScript',
+    '.scss': 'Sass',
+    '.less': 'Less',
+    '.kt': 'Kotlin',
+    '.dart': 'Dart',
+    '.jl': 'Julia',
+    '.m': 'Objective-C',
+    '.ipa': 'iOS App',
+    '.apk': 'Android App',
+    '.dll': 'Dynamic Link Library',
+    '.exe': 'Executable',
+    '.jar': 'Java Archive',
+    '.war': 'Java Web Archive',
+    '.ear': 'Enterprise Archive',
+    '.deb': 'Debian Package',
+    '.rpm': 'Red Hat Package Manager',
+    '.tar.gz': 'Tarball',
+    '.zip': 'Zip Archive',
+    '.gz': 'Gzip Compressed File',
+    '.bz2': 'Bzip2 Compressed File',
+    '.xz': 'xz Compressed File',
+    '.rar': 'RAR Archive',
+    '.7z': '7-Zip Archive',
+    '.tgz': 'Tar Gzipped Archive',
+    '.lz': 'Lzip Compressed File',
+    '.lzma': 'LZMA Compressed File',
+    '.lz4': 'LZ4 Compressed File',
+    '.zst': 'Zstandard Compressed File',
+    '.csv': 'CSV',
+    '.tsv': 'TSV',
+    '.xlsx': 'Excel',
+    '.xls': 'Excel',
+    '.pdf': 'PDF',
+    '.docx': 'Word',
+    '.doc': 'Word',
+    '.txt': 'Text',
+    '.md': 'Markdown',
+    '.rtf': 'Rich Text Format',
+    '.pptx': 'PowerPoint',
+    '.ppt': 'PowerPoint',
+    '.key': 'Keynote',
+    '.numbers': 'Numbers',
+    '.odt': 'OpenDocument Text',
+    '.ods': 'OpenDocument Spreadsheet',
+    '.odp': 'OpenDocument Presentation',
+    '.odg': 'OpenDocument Graphics',
+    '.odf': 'OpenDocument Formula',
+}
+
+def filter_files(file_list):
+    filtered_files = collections.defaultdict(list)
+    for file_ in file_list:
+        file = file_['path']
+        file_extension = '.' + file.split('.')[-1]
+        if file_extension in file_extension_to_language:
+            language = file_extension_to_language[file_extension]
+            filtered_files[language].append(file_)
+    return filtered_files
+

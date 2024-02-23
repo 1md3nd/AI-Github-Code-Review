@@ -4,8 +4,9 @@ from utils import fix_url, is_ignored_files,is_ignored_folder
 from dotenv import load_dotenv
 import os
 import base64
-from utils import clean_and_format_python_code, clean_and_format_markdown, clean_and_format_text, clean_and_format_ipynb
-from utils import clean_dockerfile, clean_shell_script
+from utils import filter_files
+from collections import defaultdict
+import chardet
 # import beautifulsoup
 
 load_dotenv()
@@ -118,11 +119,16 @@ def extract_blobs_data(blobs):
 
 def get_loc(content):
     count = 0
-    for c in content.splitlines():
-        c = c.strip()
-        if c and not c.startswith('#'):
-            count+=1
+    try:
+        for c in content.splitlines():
+            c = c.strip()
+            if c and not c.startswith('#'):
+                count+=1
+    except Exception as e:
+        print(e)
+        # print(content)
     return count
+
 
 def get_comments(content):
     return 'no comments'
@@ -133,24 +139,14 @@ def process_blob(blob):
     url = blob['url']
     res = get_url(url)
     content = base64.b64decode(res['content'])
-    file_name = blob['path'].lower()
-    result['type'] = None
-    if file_name.endswith('.py'):
-        content = clean_and_format_python_code(content)
-        result['LOC'] = get_loc(content)
-        result['type'] = 'python'
-    elif file_name.endswith('.md'):
-        content = clean_and_format_markdown(content)
-        result['type'] = 'Markdown'
-    elif file_name.endswith('.txt'):
-        content = clean_and_format_text(content)
-        result['type'] = 'text'
-    elif file_name.endswith('.ipynb'):
-        content = clean_and_format_ipynb(content)
-    elif file_name.endswith('.sh'):
-        content = clean_shell_script(content)
-    elif file_name.startswith('dockerfile'):
-        content = clean_dockerfile(content)
+    encoding = chardet.detect(content)['encoding']
+    print(blob['path'],encoding)
+    if encoding == 'UTF-16':
+        content = content.decode('utf-16')
+    else:
+        content = content.decode('utf-8')
+    result['LOC'] = get_loc(content)
+    
     # print('-------------------------')
     # print('-------------------------')
     # print(blob['path'])
@@ -158,30 +154,34 @@ def process_blob(blob):
     result['context'] = get_comments(content)
     return result
 
-def get_cummlative(data):
-    raw = {}
-    raw['total_LOC'] = 0
-    raw['md'] = False
-    raw['test_cases'] = False
-
-    for d in data:
-        if d['type'] == 'Markdown':
-            raw['md'] = True
-        elif d['type'] == 'python':
-            raw['total_LOC'] += d['LOC']
-        elif d['type'] == 'test':
-            raw['test_cases'] = True
+def get_cummlative(filtered_files_dict):
+    raw_metadata = defaultdict(int)
+    for file_type, files in filtered_files_dict.items():
+        for file in files:
+            raw_metadata[file_type] += file['LOC']
         
-    data['meta_data'] = raw
-    return data
+    return raw_metadata
 
-repo = '1md3nd/materials_backend'
+def process_files(files_dict: dict):
+    file_type_res = defaultdict(list)
+    for file_type, files in files_dict.items():
+        for file in files:
+            res = process_blob(file)
+            file_type_res[file_type].append(res)
+    return file_type_res
+        
+
+
+repo = '1md3nd/job-scraping-apply'
 main_branch = get_repo_main_branch(repo)
 sha = get_sha(main_branch)
 res = extract_blobs_lists(repo,sha)
-data = extract_blobs_data(res)
-cummlative_data = get_cummlative(data)
-
+filtered_files = filter_files(res)
+filtered_files_res = process_files(filtered_files)
+# data = extract_blobs_data(res)
+cummlative_data = get_cummlative(filtered_files_res)
+print(filtered_files_res)
+# print('--------------------')
 print(cummlative_data)
 
 # print(res)
