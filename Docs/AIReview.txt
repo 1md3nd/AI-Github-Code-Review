@@ -5,7 +5,7 @@ Also we can evaluate different
 
 Rating System:
 	The rating can be done using the various aspect like
-	- Line of Code
+	- Line of Code (done)
 	- Commit limit
 	- module imported
 	- proper staging of ml pipelines (optional)
