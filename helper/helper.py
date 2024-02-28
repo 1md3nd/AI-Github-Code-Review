@@ -12,6 +12,7 @@ import chardet
 load_dotenv()
 
 # GITHUB personal access token
+BASE_URL = 'https://api.github.com'
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
 
 # Define the default headers
@@ -30,6 +31,7 @@ def handle_request_exception(func):
             # Get the URL from the function's arguments
             url = func(*args, **kwargs)
             # Fix the URL if needed
+            print(url)
             url = fix_url(url)
             # Combine the repetitive parts of requests.get() calls
             res = requests.get(url, headers=H)
@@ -43,18 +45,18 @@ def handle_request_exception(func):
 # Apply the decorator to your functions
 @handle_request_exception
 def fetch_ratelimit():
-    return 'https://api.github.com/rate_limit'
+    return f'{BASE_URL}/rate_limit'
 
 @handle_request_exception
-def get_repo_stats(url):
-    return 'https://api.github.com/repos/'+ url
+def get_repo_stats(owner,repo):
+    return f'{BASE_URL}/repos/{owner}/{repo}'
 
 @handle_request_exception
-def get_repo_branches(url):
-    return 'https://api.github.com/repos/'+ url + '/branches'
+def get_repo_branches(owner,repo):
+    return f'{BASE_URL}/repos/{owner}/{repo}/branches'
 
-def get_repo_main_branch(url):
-    branches = get_repo_branches(url)
+def get_repo_main_branch(owner,repo):
+    branches = get_repo_branches(owner,repo)
     if not branches:
         return None
     if len(branches) == 1:
@@ -65,38 +67,28 @@ def get_repo_main_branch(url):
     return branches[0]
 
 @handle_request_exception
-def get_tree(url,sha):
-    return 'https://api.github.com/repos/' + url + '/git/trees/' + sha
+def get_tree(owner,repo,sha):
+    return f'{BASE_URL}/repos/{owner}/{repo}/git/trees/{sha}'
 
 @handle_request_exception
-def get_blob(url,sha):
-    return 'https://api.github.com/repos/' + url + '/git/blobs/' + sha
+def get_blob(owner,repo,sha):
+    return f'{BASE_URL}/repos/{owner}/{repo}/git/blobs/{sha}'
 
 @handle_request_exception
 def get_url(url):
     return url
 
-# res = get_repo_main_branch('1md3nd/materials_backend')
-# sha = res['commit']['sha']
-# r1 = get_tree('1md3nd/materials_backend',sha)
-# for r in r1['tree']:
-#     if r['type'] == 'blob':
-#         print(r['path'] )
-#         enc = get_blob('1md3nd/materials_backend',r['sha'])
-#         dec = base64.b64decode(enc['content'])
-#         print(dec)
-
 def get_sha(paths):
     return paths['commit']['sha']
 
 
-def extract_blobs_lists(url,sha):
+def extract_blobs_lists(owner,repo,sha):
     tree_stack = [sha]
     blobs = []
     t = ['root']
     while tree_stack:
         curr_sha = tree_stack.pop(0)
-        curr_tree = get_tree(url,curr_sha)
+        curr_tree = get_tree(owner,repo,curr_sha)
         curr_path = t.pop(0)
         for curr in curr_tree['tree']:
             if curr['type'] == 'blob':
@@ -146,11 +138,6 @@ def process_blob(blob):
     else:
         content = content.decode('utf-8')
     result['LOC'] = get_loc(content)
-    
-    # print('-------------------------')
-    # print('-------------------------')
-    # print(blob['path'])
-    # print(content)
     result['context'] = get_comments(content)
     return result
 
@@ -171,11 +158,11 @@ def process_files(files_dict: dict):
     return file_type_res
         
 
-
-repo = '1md3nd/job-scraping-apply'
-main_branch = get_repo_main_branch(repo)
+owner = '1md3nd'
+repo = 'job-scraping-apply'
+main_branch = get_repo_main_branch(owner,repo)
 sha = get_sha(main_branch)
-res = extract_blobs_lists(repo,sha)
+res = extract_blobs_lists(owner,repo,sha)
 filtered_files = filter_files(res)
 filtered_files_res = process_files(filtered_files)
 # data = extract_blobs_data(res)

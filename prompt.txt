@@ -1,0 +1,5 @@
+review this code and provide feedback like error, typo on line number
+- It is code, decide the programming language and  use suitable format to decide the syntax error,type error, and other types of error
+- exclude all the commented lines
+- provide response as a json format  like {error: {line_number : 1, code: "code",error_type: "error type", error_message: ""}, typo: { line_number: 2, typo: " xyz" }}
+- only provide such results which are critical

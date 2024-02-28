@@ -6,7 +6,7 @@ def fix_url(url):
     url = url.strip().strip('/')
     return url
 
-FOLDERS_TO_EXCLUDE = ['migrations','__pycache__/', 'build/', 'develop-eggs/', 'dist/', 'downloads/',
+FOLDERS_TO_EXCLUDE = ['migrations','__pycache__/', 'build/', 'develop-eggs/', 'dist/', 'downloads/','.vscode/',
     'eggs/', '.eggs/', 'lib/', 'lib64/', 'parts/', 'sdist/', 'var/',
     'wheels/', 'share/python-wheels/', 'htmlcov/', '.tox/', '.nox/',
     '.cache/', '.hypothesis/', '.pytest_cache/', '__pypackages__/',
