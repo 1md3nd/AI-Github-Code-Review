@@ -1,13 +1,12 @@
 import requests
 from functools import wraps
-from utils import fix_url, is_ignored_files,is_ignored_folder
+from helper.utils import fix_url,is_ignored_files,is_ignored_folder
 from dotenv import load_dotenv
 import os
 import base64
-from utils import filter_files
+from helper.utils import filter_files
 from collections import defaultdict
 import chardet
-# import beautifulsoup
 
 load_dotenv()
 
@@ -158,17 +157,14 @@ def process_files(files_dict: dict):
     return file_type_res
         
 
-owner = '1md3nd'
-repo = 'job-scraping-apply'
-main_branch = get_repo_main_branch(owner,repo)
-sha = get_sha(main_branch)
-res = extract_blobs_lists(owner,repo,sha)
-filtered_files = filter_files(res)
-filtered_files_res = process_files(filtered_files)
-# data = extract_blobs_data(res)
-cummlative_data = get_cummlative(filtered_files_res)
-print(filtered_files_res)
-# print('--------------------')
-print(cummlative_data)
-
-# print(res)
+def process_repo(owner,repo):
+    main_branch = get_repo_main_branch(owner,repo)
+    print(owner,repo,main_branch)
+    sha = get_sha(main_branch)
+    res = extract_blobs_lists(owner,repo,sha)
+    filtered_files = filter_files(res)
+    filtered_files_res = process_files(filtered_files)
+    # data = extract_blobs_data(res)
+    cummlative_data = get_cummlative(filtered_files_res)
+   
+    return filtered_files_res,cummlative_data

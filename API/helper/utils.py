@@ -1,5 +1,7 @@
 import fnmatch
 import collections
+import re
+
 
 def fix_url(url):
     # Remove leading and trailing spaces and slashes
@@ -121,4 +123,27 @@ def filter_files(file_list):
             language = file_extension_to_language[file_extension]
             filtered_files[language].append(file_)
     return filtered_files
+
+
+def extract_owner_and_repo(url):
+    # Remove leading/trailing whitespace and trailing slashes
+    url = url.strip("'").strip().rstrip('/')
+
+    # Define regular expressions for different GitHub URL formats
+    patterns = [
+        r'^https?://github.com/([^/]+)/([^/]+)',
+        r'^git@github.com:([^/]+)/([^/]+)',
+        r'^github.com/([^/]+)/([^/]+)'
+    ]
+
+    # Loop through patterns and match against the URL
+    for pattern in patterns:
+        match = re.match(pattern, url)
+        if match:
+            owner = match.group(1)
+            repo = match.group(2)
+            return owner, repo
+
+    # Return None if no match is found
+    return None, None
 
