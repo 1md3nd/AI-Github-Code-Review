@@ -18,7 +18,7 @@ if github_url:
     payload = {'repo_url':github_url}
     response = requests.get(API_ENDPOINT+'searchRepo',params=payload)
     # if response.status_code == '200':
-    st.write(response.text)
+    st.json(response.text)
     
     # Fetch and Process GitHub Repository
     # Call backend API to fetch and process GitHub repository based on the provided URL

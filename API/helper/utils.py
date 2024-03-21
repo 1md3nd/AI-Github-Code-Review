@@ -1,6 +1,26 @@
 import fnmatch
 import collections
 import re
+from helper.vars import comment_patterns
+comment_file_dict = comment_patterns
+def comments_file_filter(file_type):
+    """
+    Count the number of comments in a given file text based on the programming language.
+
+    Parameters:
+    file_text (str): The text content of the file.
+    file_type (str): The programming language of the file.
+
+    Returns:
+    int: The number of comments found in the file text.
+    """
+    
+
+    if file_type in comment_patterns:
+        pattern = comment_patterns[file_type]
+        return pattern
+    else:
+        return None
 
 
 def fix_url(url):
@@ -122,6 +142,7 @@ def filter_files(file_list):
         if file_extension in file_extension_to_language:
             language = file_extension_to_language[file_extension]
             filtered_files[language].append(file_)
+        
     return filtered_files
 
 

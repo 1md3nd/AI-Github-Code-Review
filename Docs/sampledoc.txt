@@ -1,9 +1,0 @@
-Requirements
-
-
-Design
-  Breakup into modules, packages, functions, classes
-
-Code and Data Structures
-
-Testing
