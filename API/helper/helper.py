@@ -252,7 +252,7 @@ def process_blob(blob,file_type):
     res = get_url(url)
     content = base64.b64decode(res['content'])
     encoding = chardet.detect(content)['encoding']
-    print(blob['path'],encoding)
+    # print(blob['path'],encoding)
     if encoding == 'UTF-16':
         content = content.decode('utf-16')
     else:
@@ -310,7 +310,7 @@ def process_repo(owner,repo):
         It also contains a boolean key 'forked' to indicate if the repo is a fork. 
     """
     main_branch = get_repo_main_branch(owner,repo)
-    print(owner,repo,main_branch)
+    # print(owner,repo,main_branch)
     sha = get_sha(main_branch)
     res = extract_blobs_lists(owner,repo,sha)
     forked = is_forked(owner,repo)["fork"]
